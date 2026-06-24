@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Back.Api/Back.Api.csproj" />
+    <Project Path="src/Back.Application/Back.Application.csproj" />
+    <Project Path="src/Back.Domain/Back.Domain.csproj" />
+    <Project Path="src/Back.Infrastructure/Back.Infrastructure.csproj" />
+  </Folder>
+</Solution>

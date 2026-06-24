@@ -1,0 +1,16 @@
+@Back_Api_HostAddress = https://localhost:7230
+
+GET {{Back_Api_HostAddress}}/api/customers
+Accept: application/json
+
+###
+
+POST {{Back_Api_HostAddress}}/api/customers
+Content-Type: application/json
+
+{
+  "name": "Ada Lovelace",
+  "email": "ada@example.com"
+}
+
+###
