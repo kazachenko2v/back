@@ -5,6 +5,9 @@
 .vscode/
 .idea/
 .env
+.env.*
+!.env.example
+!.env.prod.example
 *.user
 *.suo
 *.log

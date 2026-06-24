@@ -68,6 +68,41 @@ Delete the containers and the database volume for a clean start:
 docker compose down --volumes
 ```
 
+## Production Docker
+
+For a production-style Docker run, copy the production environment example and
+replace the password with a strong value:
+
+```powershell
+copy .env.prod.example .env.prod
+```
+
+Then start the production compose file:
+
+```powershell
+docker compose --env-file .env.prod -f compose.prod.yaml up -d --build
+```
+
+The API listens on `http://localhost:8080`. In a real production deployment, put a
+reverse proxy such as Nginx, Caddy, IIS, or a cloud load balancer in front of the
+API to terminate HTTPS.
+
+Stop the production containers without deleting the database:
+
+```powershell
+docker compose --env-file .env.prod -f compose.prod.yaml down
+```
+
+Delete the production database volume only when you intentionally want to remove
+all data:
+
+```powershell
+docker compose --env-file .env.prod -f compose.prod.yaml down --volumes
+```
+
+The included SQL Server service uses `MSSQL_PID=Express`. For a serious production
+system, prefer a managed SQL Server or a properly licensed SQL Server edition.
+
 ## Sample endpoints
 
 - `GET /api/customers?page=1&pageSize=50`
