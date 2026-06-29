@@ -33,7 +33,9 @@ public sealed class CustomersController(ICustomerService customers) : Controller
         }
 
         var result = await customers.ListAsync(page, pageSize, cancellationToken);
-        return Ok(result);
+        Response.Headers["X-Cache"] = result.FromCache ? "HIT" : "MISS";
+
+        return Ok(result.Page);
     }
 
     [HttpGet("{id:guid}")]

@@ -1,6 +1,19 @@
 name: back
 
 services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - ping
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
   database:
     image: mcr.microsoft.com/mssql/server:2022-latest
     environment:
@@ -28,12 +41,15 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: Server=database,1433;Database=BackDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};Encrypt=True;TrustServerCertificate=True
+      ConnectionStrings__Redis: redis:6379,abortConnect=false
       Database__ApplyMigrations: "true"
       HttpsRedirection__Enabled: "false"
     ports:
       - "8080:8080"
     depends_on:
       database:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
 volumes:

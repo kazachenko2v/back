@@ -1,10 +1,13 @@
 using Back.Application.Abstractions;
+using Back.Application.Customers;
 using Back.Domain.Customers;
+using Back.Infrastructure.Caching;
 using Back.Infrastructure.Persistence;
 using Back.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using StackExchange.Redis;
 
 namespace Back.Infrastructure;
 
@@ -24,6 +27,27 @@ public static class DependencyInjection
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<IUnitOfWork>(serviceProvider =>
             serviceProvider.GetRequiredService<AppDbContext>());
+
+        services.Configure<CustomerPageCacheOptions>(options =>
+        {
+            if (int.TryParse(configuration["Cache:Customers:PageTtlSeconds"], out var pageTtlSeconds) &&
+                pageTtlSeconds > 0)
+            {
+                options.PageTtlSeconds = pageTtlSeconds;
+            }
+        });
+
+        var redisConnectionString = configuration.GetConnectionString("Redis");
+        if (string.IsNullOrWhiteSpace(redisConnectionString))
+        {
+            services.AddSingleton<ICustomerPageCache, NullCustomerPageCache>();
+        }
+        else
+        {
+            services.AddSingleton<IConnectionMultiplexer>(_ =>
+                ConnectionMultiplexer.Connect(redisConnectionString));
+            services.AddSingleton<ICustomerPageCache, RedisCustomerPageCache>();
+        }
 
         return services;
     }

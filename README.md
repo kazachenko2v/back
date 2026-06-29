@@ -43,8 +43,9 @@ The default connection string uses SQL Server LocalDB and creates a `BackDb` dat
 
 ## Docker
 
-The Docker setup runs the API and SQL Server together. The database is stored in a
-named volume, and the API applies existing EF Core migrations when it starts.
+The Docker setup runs the API, SQL Server, and Redis together. SQL Server stores
+the real customer data in a named volume. Redis caches repeated paged customer
+list reads, and the API applies existing EF Core migrations when it starts.
 
 ```powershell
 docker compose up --build
@@ -86,6 +87,9 @@ docker compose --env-file .env.prod -f compose.prod.yaml up -d --build
 The API listens on `http://localhost:8080`. In a real production deployment, put a
 reverse proxy such as Nginx, Caddy, IIS, or a cloud load balancer in front of the
 API to terminate HTTPS.
+
+Redis is used only as a cache. SQL Server remains the source of truth, so losing
+the Redis container does not delete customer data.
 
 Stop the production containers without deleting the database:
 

@@ -5,6 +5,7 @@ namespace Back.Application.Customers;
 
 internal sealed class CustomerService(
     ICustomerRepository customers,
+    ICustomerPageCache customerPageCache,
     IUnitOfWork unitOfWork) : ICustomerService
 {
     public async Task<CustomerDto> CreateAsync(CreateCustomerRequest request, CancellationToken cancellationToken = default)
@@ -13,6 +14,7 @@ internal sealed class CustomerService(
 
         customers.Add(customer);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        await customerPageCache.InvalidateAsync(cancellationToken);
 
         return Map(customer);
     }
@@ -23,20 +25,30 @@ internal sealed class CustomerService(
         return customer is null ? null : Map(customer);
     }
 
-    public async Task<PagedResult<CustomerDto>> ListAsync(
+    public async Task<CustomerListResult> ListAsync(
         int page,
         int pageSize,
         CancellationToken cancellationToken = default)
     {
+        var cachedPage = await customerPageCache.GetAsync(page, pageSize, cancellationToken);
+        if (cachedPage is not null)
+        {
+            return new CustomerListResult(cachedPage, FromCache: true);
+        }
+
         var skip = (page - 1) * pageSize;
         var totalCount = await customers.CountAsync(cancellationToken);
         var customerList = await customers.ListPageAsync(skip, pageSize, cancellationToken);
 
-        return new PagedResult<CustomerDto>(
+        var result = new PagedResult<CustomerDto>(
             customerList.Select(Map).ToList(),
             page,
             pageSize,
             totalCount);
+
+        await customerPageCache.SetAsync(result, cancellationToken);
+
+        return new CustomerListResult(result, FromCache: false);
     }
 
     public async Task<CustomerDto?> ChangeEmailAsync(
@@ -52,6 +64,7 @@ internal sealed class CustomerService(
 
         customer.ChangeEmail(request.Email);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        await customerPageCache.InvalidateAsync(cancellationToken);
 
         return Map(customer);
     }
@@ -66,6 +79,7 @@ internal sealed class CustomerService(
 
         customers.Remove(customer);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        await customerPageCache.InvalidateAsync(cancellationToken);
 
         return true;
     }

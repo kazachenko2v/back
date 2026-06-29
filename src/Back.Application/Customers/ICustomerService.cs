@@ -6,7 +6,7 @@ public interface ICustomerService
 
     Task<CustomerDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
-    Task<PagedResult<CustomerDto>> ListAsync(int page, int pageSize, CancellationToken cancellationToken = default);
+    Task<CustomerListResult> ListAsync(int page, int pageSize, CancellationToken cancellationToken = default);
 
     Task<CustomerDto?> ChangeEmailAsync(Guid id, ChangeCustomerEmailRequest request, CancellationToken cancellationToken = default);
 
